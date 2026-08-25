@@ -45,6 +45,7 @@
   --accent: #2ed6a1;
   --live: #1f9e78;
   --accent-soft: rgba(46, 214, 161, 0.09);
+  --accent-soft2: rgba(46, 214, 161, 0.14);
   --accent-line: rgba(46, 214, 161, 0.22);
   --accent-focus: rgba(46, 214, 161, 0.5);
 
@@ -79,6 +80,10 @@ html.light {
 
   --glow-turq: rgba(46, 214, 161, 0.1);
   --glow-blue: rgba(41, 112, 255, 0.08);
+
+  /* the accent tints need more alpha to register against a light background */
+  --accent-soft: rgba(46, 214, 161, 0.14);
+  --accent-soft2: rgba(46, 214, 161, 0.22);
 }
 
 /* ---------- Base / minimal reset ---------- */
@@ -172,6 +177,13 @@ svg {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+/* arrow that marks a link as leaving the site */
+.ext {
+  width: 13px;
+  height: 13px;
+  flex: none;
+  color: var(--accent);
 }
 .live {
   color: var(--live);
@@ -324,6 +336,42 @@ svg {
 }
 .status-meta {
   margin-top: 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--t3);
+}
+
+/* run-a-node link — takes the auto margin so it and the status card sit as one
+   cluster at the foot of the sidebar */
+.run-node {
+  margin-top: auto;
+  display: block;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  transition: background-color 0.15s, border-color 0.15s;
+}
+.run-node:hover {
+  background: var(--accent-soft2);
+  border-color: var(--accent-focus);
+}
+.run-node + .status-card {
+  margin-top: 10px;
+}
+.run-node-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.run-node-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+.run-node-sub {
+  margin-top: 6px;
   font-size: 11px;
   line-height: 1.5;
   color: var(--t3);
@@ -547,6 +595,81 @@ svg {
 }
 .t-amber {
   --c: var(--amber);
+}
+
+/* ---------- Run-a-node call to action ---------- */
+.node-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  backdrop-filter: blur(10px);
+  transition: background-color 0.15s, border-color 0.15s;
+}
+.node-cta:hover {
+  background: var(--accent-soft2);
+  border-color: var(--accent-focus);
+}
+.node-cta-mark {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 12px;
+  background: linear-gradient(150deg, var(--dcr-turq), var(--dcr-cyan));
+  color: #05070e;
+}
+.node-cta-mark svg {
+  width: 21px;
+  height: 21px;
+}
+/* flex-basis lets the button wrap below the text on a narrow viewport */
+.node-cta-text {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.node-cta-text b {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.node-cta-text span {
+  display: block;
+  margin-top: 3px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--t2);
+}
+.node-cta-text strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.node-cta-go {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+  padding: 10px 15px;
+  border-radius: 11px;
+  background: var(--card2);
+  border: 1px solid var(--border2);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  transition: border-color 0.15s;
+}
+.node-cta:hover .node-cta-go {
+  border-color: var(--accent-focus);
 }
 
 /* ---------- Cards / panels ---------- */
@@ -1254,6 +1377,7 @@ svg {
     padding: 0;
   }
   .nav-eyebrow,
+  .run-node,
   .status-card {
     display: none;
   }
