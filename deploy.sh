@@ -17,7 +17,7 @@
 #   --testnet         Crawl testnet instead of mainnet.
 #   --no-onion        Disable Tor support (skip building/running arti).
 #   --onion-seed <l>  Comma-separated v3 .onion bootstrap peers to probe.
-#   --go-version <v>  Go toolchain version to install   (default: 1.26.4).
+#   --go-version <v>  Go toolchain version to install   (default: 1.27.1).
 #   --repo <url>      Git repository to deploy.
 #   --listen <addr>   Internal listen address           (default: 127.0.0.1:8111).
 #   -h, --help        Show this help.
@@ -30,7 +30,7 @@ set -euo pipefail
 
 # ---- Configuration --------------------------------------------------------
 
-GO_VERSION="1.26.4"
+GO_VERSION="1.27.1"
 REPO_URL="https://github.com/jzbz/dcrmapper"
 SERVICE_USER="dcrmapper"
 APP_HOME="/opt/dcrmapper"

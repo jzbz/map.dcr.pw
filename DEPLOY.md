@@ -61,7 +61,7 @@ flags:
 | `--testnet` | Crawl testnet instead of mainnet. |
 | `--no-onion` | Disable Tor support (skip building and running arti). |
 | `--onion-seed <list>` | Comma-separated v3 `.onion` bootstrap peers to probe. |
-| `--go-version <v>` | Override the Go toolchain version (default `1.26.4`). |
+| `--go-version <v>` | Override the Go toolchain version (default `1.27.1`). |
 
 **Onion support is on by default.** The script builds [arti](https://gitlab.torproject.org/tpo/core/arti)
 and runs it as a local SOCKS proxy so the crawler can reach Tor v3 `.onion`
@@ -104,11 +104,11 @@ sudo ufw enable
 
 ## 2. Install Go
 
-dcrmapper targets the Go version in `go.mod` (currently **1.26.x**). Distro
+dcrmapper targets the Go version in `go.mod` (currently **1.27.x**). Distro
 packages are often older, so install the official toolchain:
 
 ```sh
-GO_VERSION=1.26.4
+GO_VERSION=1.27.1
 curl -sL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz
 sudo rm -rf /usr/local/go
 sudo tar -C /usr/local -xzf /tmp/go.tar.gz
