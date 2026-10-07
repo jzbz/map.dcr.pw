@@ -21,8 +21,8 @@ make check  # gofmt, go vet, golangci-lint and tests (the pre-commit gate)
 ```
 
 There is no build step beyond `go build`: the templates and static assets are
-embedded into the binary with `go:embed`, so the compiled `dcrmapper` is
-self-contained and runs from any directory.
+embedded into the binary with `go:embed`, so the `dcrmapper` binary that
+`make build` produces is self-contained and runs from any directory.
 
 ## Frontend
 

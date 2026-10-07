@@ -11,8 +11,8 @@ import (
 
 	"github.com/decred/dcrd/chaincfg/v3"
 	"github.com/decred/dcrd/dcrutil/v4"
-	"github.com/jzbz/dcrmapper/crawler"
-	"github.com/jzbz/dcrmapper/server"
+	"github.com/jzbz/map.dcr.pw/crawler"
+	"github.com/jzbz/map.dcr.pw/server"
 )
 
 var (

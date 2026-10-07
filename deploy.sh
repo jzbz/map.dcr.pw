@@ -31,7 +31,7 @@ set -euo pipefail
 # ---- Configuration --------------------------------------------------------
 
 GO_VERSION="1.27.1"
-REPO_URL="https://github.com/jzbz/dcrmapper"
+REPO_URL="https://github.com/jzbz/map.dcr.pw"
 SERVICE_USER="dcrmapper"
 APP_HOME="/opt/dcrmapper"
 APP_DIR="${APP_HOME}/app"

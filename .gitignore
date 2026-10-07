@@ -1,5 +1,7 @@
 *.exe
 dcrmapper
+# A bare `go build` names the binary after the module path.
+/map.dcr.pw
 # Temp binary written by deploy.sh before the atomic swap.
 dcrmapper.new
 

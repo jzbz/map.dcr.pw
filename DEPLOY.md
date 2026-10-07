@@ -42,8 +42,8 @@ The repository ships a [`deploy.sh`](deploy.sh) that performs every step in this
 guide. On a fresh VPS, as root:
 
 ```sh
-git clone https://github.com/jzbz/dcrmapper
-sudo ./dcrmapper/deploy.sh --domain map.example.com
+git clone https://github.com/jzbz/map.dcr.pw
+sudo ./map.dcr.pw/deploy.sh --domain map.example.com
 ```
 
 It installs Go and Caddy, builds the app, and starts it as a hardened systemd
@@ -156,7 +156,7 @@ sudo useradd --system --create-home --home-dir /opt/dcrmapper --shell /usr/sbin/
 Clone and compile into the service user's directory:
 
 ```sh
-sudo git clone https://github.com/jzbz/dcrmapper /opt/dcrmapper/app
+sudo git clone https://github.com/jzbz/map.dcr.pw /opt/dcrmapper/app
 cd /opt/dcrmapper/app
 sudo /usr/local/go/bin/go build -o /opt/dcrmapper/app/dcrmapper .
 sudo chown -R dcrmapper:dcrmapper /opt/dcrmapper

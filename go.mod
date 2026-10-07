@@ -1,4 +1,4 @@
-module github.com/jzbz/dcrmapper
+module github.com/jzbz/map.dcr.pw
 
 go 1.27.1
 
