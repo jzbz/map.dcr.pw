@@ -11,6 +11,13 @@
 #   sudo ./deploy.sh --domain map.example.com --testnet
 #   sudo ./deploy.sh --http                 # no domain: serve plain HTTP on :80
 #
+# Update map.dcr.pw: run the latest deploy.sh from a root-owned clone (made on
+# first use; the script syncs /opt/dcrmapper/app itself) with the flags of the
+# original install, since it rewrites the systemd units and the Caddyfile from
+# them. Never run the copy in /opt/dcrmapper/app as root: the service account
+# can write to it.
+#   sudo sh -c 'd=/root/map.dcr.pw; { [ -d "$d/.git" ] || git clone https://github.com/jzbz/map.dcr.pw "$d"; } && git -C "$d" pull --ff-only && "$d/deploy.sh" --domain map.dcr.pw'
+#
 # Options:
 #   --domain <host>   Domain to serve (Caddy provisions a TLS cert for it).
 #   --http            Serve plain HTTP on :80 instead of HTTPS (for testing).
@@ -45,6 +52,9 @@ ONION_SEED=""
 ARTI_SOCKS="127.0.0.1:9150"
 # Where the Rust toolchain used to build arti is kept (out of /root).
 RUST_HOME="/opt/rust"
+# arti release to build. Pinned so a re-run upgrades existing hosts to it; bump
+# it for each arti security release (minimum Rust: see its rust-version).
+ARTI_VERSION="2.7.0"
 
 # ---- Logging --------------------------------------------------------------
 
@@ -165,8 +175,17 @@ fi
 # of this script. Skipped entirely with --no-onion.
 
 if [[ $ONION -eq 1 ]]; then
-  if [[ -x /usr/local/bin/arti ]]; then
-    ok "arti already installed ($(/usr/local/bin/arti --version 2>/dev/null | head -1))"
+  export RUSTUP_HOME="${RUST_HOME}/rustup"
+  export CARGO_HOME="${RUST_HOME}/cargo"
+  # cargo records what it installed under --root; a registry install is listed
+  # as "arti v<version>:". Captured first: under pipefail, grep -q closing the
+  # pipe early could fail the check.
+  ARTI_INSTALLED=""
+  if [[ -x "${CARGO_HOME}/bin/cargo" ]]; then
+    ARTI_INSTALLED="$("${CARGO_HOME}/bin/cargo" install --list --root /usr/local 2>/dev/null || true)"
+  fi
+  if grep -q "^arti v${ARTI_VERSION}:" <<<"$ARTI_INSTALLED"; then
+    ok "arti ${ARTI_VERSION} already installed"
   else
     log "Installing build dependencies for arti"
     # libssl-dev: arti's default native-tls backend links the system OpenSSL
@@ -175,11 +194,12 @@ if [[ $ONION -eq 1 ]]; then
     ok "build-essential, pkg-config, libssl-dev, libsqlite3-dev installed"
 
     log "Installing Rust toolchain (to build arti)"
-    export RUSTUP_HOME="${RUST_HOME}/rustup"
-    export CARGO_HOME="${RUST_HOME}/cargo"
     if [[ ! -x "${CARGO_HOME}/bin/cargo" ]]; then
       curl --proto '=https' --tlsv1.2 -fsSL https://sh.rustup.rs \
         | sh -s -- -y --profile minimal --no-modify-path
+    else
+      # New arti releases raise their minimum Rust version.
+      "${CARGO_HOME}/bin/rustup" update stable --no-self-update
     fi
     ok "Rust ready ($(${CARGO_HOME}/bin/cargo --version))"
 
@@ -191,8 +211,10 @@ if [[ $ONION -eq 1 ]]; then
       warn "Under 2 GB RAM: building arti single-threaded (slow). Add swap if it stalls."
     fi
 
-    log "Building arti from source — this can take several minutes"
-    "${CARGO_HOME}/bin/cargo" install --locked --root /usr/local arti
+    log "Building arti ${ARTI_VERSION} from source — this can take several minutes"
+    # --force: the check above already decided to build, so also replace an
+    # arti in /usr/local/bin that cargo did not record installing there.
+    "${CARGO_HOME}/bin/cargo" install --locked --force --root /usr/local --version "${ARTI_VERSION}" arti
     ok "arti installed ($(/usr/local/bin/arti --version | head -1))"
   fi
 

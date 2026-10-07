@@ -63,6 +63,18 @@ flags:
 | `--onion-seed <list>` | Comma-separated v3 `.onion` bootstrap peers to probe. |
 | `--go-version <v>` | Override the Go toolchain version (default `1.27.1`). |
 
+To update an existing install, run the latest `deploy.sh` from a root-owned
+clone with the flags of the original install (it rewrites the systemd units and
+the Caddyfile from them). For map.dcr.pw:
+
+```sh
+sudo sh -c 'd=/root/map.dcr.pw; { [ -d "$d/.git" ] || git clone https://github.com/jzbz/map.dcr.pw "$d"; } && git -C "$d" pull --ff-only && "$d/deploy.sh" --domain map.dcr.pw'
+```
+
+The clone is made on first use, and the script syncs `/opt/dcrmapper/app`
+itself. Never run the `deploy.sh` inside `/opt/dcrmapper/app` as root: the
+service account can write to it.
+
 **Onion support is on by default.** The script builds [arti](https://gitlab.torproject.org/tpo/core/arti)
 and runs it as a local SOCKS proxy so the crawler can reach Tor v3 `.onion`
 peers. Compiling arti from source is the one heavy step — it pulls in a Rust
@@ -191,7 +203,8 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
   | sh -s -- -y --profile minimal --no-modify-path
 # On a 1 GB host, cap the build to one job so it doesn't run out of memory.
 export CARGO_BUILD_JOBS=1
-/opt/rust/cargo/bin/cargo install --locked --root /usr/local arti
+# Same release deploy.sh pins in ARTI_VERSION.
+/opt/rust/cargo/bin/cargo install --locked --root /usr/local --version 2.7.0 arti
 arti --version
 ```
 
@@ -350,9 +363,17 @@ sudo systemctl restart dcrmapper
 
 The node cache in `/opt/dcrmapper/.dcrmapper/` persists across restarts, so the
 map repopulates almost instantly after an update. arti is independent and keeps
-running across dcrmapper updates; it only needs attention if you want a newer
-arti (`cargo install --locked --root /usr/local arti` again, then
-`sudo systemctl restart arti`).
+running across dcrmapper updates. `deploy.sh` pins it in `ARTI_VERSION` and
+rebuilds it whenever the installed release differs, so bumping that and
+re-running the script upgrades it. By hand, with the toolchain from
+[§6](#6-build-and-run-arti-tor-proxy):
+
+```sh
+sudo env RUSTUP_HOME=/opt/rust/rustup CARGO_HOME=/opt/rust/cargo /opt/rust/cargo/bin/rustup update stable --no-self-update
+# On a 1 GB host add CARGO_BUILD_JOBS=1 after `env`.
+sudo env RUSTUP_HOME=/opt/rust/rustup CARGO_HOME=/opt/rust/cargo /opt/rust/cargo/bin/cargo install --locked --force --root /usr/local --version 2.7.0 arti
+sudo systemctl restart arti
+```
 
 ---
 
