@@ -121,15 +121,19 @@ packages are often older, so install the official toolchain:
 
 ```sh
 GO_VERSION=1.27.1
-curl -sL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz
-sudo rm -rf /usr/local/go
-sudo tar -C /usr/local -xzf /tmp/go.tar.gz
+curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz
+# sha256 from https://go.dev/dl/ (deploy.sh pins the same sums). Chained so a
+# mismatch leaves the installed Go alone.
+echo '63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445  /tmp/go.tar.gz' | sha256sum -c \
+  && sudo rm -rf /usr/local/go \
+  && sudo tar -C /usr/local -xzf /tmp/go.tar.gz
 echo 'export PATH=$PATH:/usr/local/go/bin' | sudo tee /etc/profile.d/go.sh
 export PATH=$PATH:/usr/local/go/bin
 go version
 ```
 
-> On `arm64` hosts swap `linux-amd64` for `linux-arm64`.
+> On `arm64` hosts swap `linux-amd64` for `linux-arm64`, and the sum for
+> `3450b45a3f9ee8568792736a5c5e70a1f2e9b36c35a8f74958c03e51d7d92bec`.
 
 ---
 
@@ -169,8 +173,8 @@ Clone and compile into the service user's directory:
 
 ```sh
 sudo git clone https://github.com/jzbz/map.dcr.pw /opt/dcrmapper/app
-cd /opt/dcrmapper/app
-sudo /usr/local/go/bin/go build -o /opt/dcrmapper/app/dcrmapper .
+# -C instead of cd: /opt/dcrmapper may not be readable by your own user.
+sudo /usr/local/go/bin/go build -C /opt/dcrmapper/app -o /opt/dcrmapper/app/dcrmapper .
 sudo chown -R dcrmapper:dcrmapper /opt/dcrmapper
 ```
 
@@ -354,11 +358,19 @@ there is nothing else to schedule.
 
 ## 9. Updating to a new version
 
+With `deploy.sh`, run the update one-liner from the
+[quick start](#quick-start-automated) (also in the header of `deploy.sh`). By
+hand:
+
 ```sh
-cd /opt/dcrmapper/app
-sudo -u dcrmapper git pull
-sudo /usr/local/go/bin/go build -o /opt/dcrmapper/app/dcrmapper .
-sudo systemctl restart dcrmapper
+# -buildvcs=false: building as root in a checkout the service user owns would
+# otherwise fail git's "dubious ownership" check. Chained so a failed step
+# leaves the running binary alone.
+sudo -u dcrmapper git -C /opt/dcrmapper/app pull \
+  && sudo env GOTOOLCHAIN=local /usr/local/go/bin/go build -C /opt/dcrmapper/app -buildvcs=false -o /opt/dcrmapper/app/dcrmapper.new . \
+  && sudo chown dcrmapper:dcrmapper /opt/dcrmapper/app/dcrmapper.new \
+  && sudo mv -f /opt/dcrmapper/app/dcrmapper.new /opt/dcrmapper/app/dcrmapper \
+  && sudo systemctl restart dcrmapper
 ```
 
 The node cache in `/opt/dcrmapper/.dcrmapper/` persists across restarts, so the
@@ -383,7 +395,7 @@ sudo systemctl restart arti
 | --- | --- |
 | `502 Bad Gateway` | Is the app up? `systemctl status dcrmapper`. Is it listening on `127.0.0.1:8111`? `ss -ltnp \| grep 8111`. |
 | TLS certificate not issued | DNS must resolve to this host and ports 80+443 must be open. Watch `journalctl -u caddy -f` for ACME errors. |
-| Blank page / missing styles | The app must run with `WorkingDirectory=/opt/dcrmapper/app` so `templates/` and `public/` resolve. |
+| Blank page / missing styles | Templates and assets are embedded in the binary, so this is not a path problem. A template that fails while rendering returns HTTP 200 with a truncated page and is not logged, so check the browser's network tab: the page should arrive complete, and `/public/css/app.css` and `/public/js/worldmap.js` should return 200 through Caddy. |
 | Map never populates | The crawler needs **outbound** network access. Confirm the host can reach peers and `ip-api.com`; watch `journalctl -u dcrmapper`. |
 | `Hit ip-api rate limit` in logs | Normal — the free ip-api tier is rate-limited; the crawler backs off and retries automatically. |
 | Theme switcher doesn't persist | Make sure `-domain` matches the domain you serve from. |

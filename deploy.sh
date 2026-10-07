@@ -38,6 +38,11 @@ set -euo pipefail
 # ---- Configuration --------------------------------------------------------
 
 GO_VERSION="1.27.1"
+# sha256 of the official go${GO_VERSION} linux tarballs (https://go.dev/dl/).
+# Bump together with GO_VERSION; a --go-version override is not verified.
+GO_PINNED_VERSION="${GO_VERSION}"
+GO_SHA256_AMD64="63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445"
+GO_SHA256_ARM64="3450b45a3f9ee8568792736a5c5e70a1f2e9b36c35a8f74958c03e51d7d92bec"
 REPO_URL="https://github.com/jzbz/map.dcr.pw"
 SERVICE_USER="dcrmapper"
 APP_HOME="/opt/dcrmapper"
@@ -130,8 +135,8 @@ ok "SSH, 80/tcp and 443/tcp allowed"
 # ---- 3. Go toolchain ------------------------------------------------------
 
 case "$(uname -m)" in
-  x86_64|amd64)  GO_ARCH="amd64" ;;
-  aarch64|arm64) GO_ARCH="arm64" ;;
+  x86_64|amd64)  GO_ARCH="amd64"; GO_SHA256="$GO_SHA256_AMD64" ;;
+  aarch64|arm64) GO_ARCH="arm64"; GO_SHA256="$GO_SHA256_ARM64" ;;
   *)             die "unsupported CPU architecture: $(uname -m)" ;;
 esac
 
@@ -141,6 +146,12 @@ else
   log "Installing Go ${GO_VERSION} (${GO_ARCH})"
   tmp="$(mktemp -d)"
   curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${GO_ARCH}.tar.gz" -o "${tmp}/go.tar.gz"
+  if [[ "$GO_VERSION" == "$GO_PINNED_VERSION" ]]; then
+    echo "${GO_SHA256}  ${tmp}/go.tar.gz" | sha256sum -c --quiet - \
+      || { rm -rf "$tmp"; die "Go ${GO_VERSION} tarball does not match its pinned sha256"; }
+  else
+    warn "No pinned sha256 for Go ${GO_VERSION}; tarball not verified"
+  fi
   rm -rf /usr/local/go
   tar -C /usr/local -xzf "${tmp}/go.tar.gz"
   rm -rf "$tmp"
@@ -154,7 +165,12 @@ GO=/usr/local/go/bin/go
 # ---- 4. Caddy -------------------------------------------------------------
 
 if command -v caddy >/dev/null 2>&1; then
-  ok "Caddy already installed ($(caddy version | head -1))"
+  # Pick up Caddy releases on re-runs. confold keeps our Caddyfile (rewritten
+  # below anyway) instead of stopping at dpkg's conffile prompt.
+  apt-get install -y -qq --only-upgrade \
+    -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold \
+    caddy >/dev/null
+  ok "Caddy up to date ($(caddy version | head -1))"
 else
   log "Installing Caddy from the official apt repository"
   curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
