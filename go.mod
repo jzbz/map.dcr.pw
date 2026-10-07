@@ -6,7 +6,7 @@ require (
 	github.com/decred/dcrd/chaincfg/v3 v3.3.0
 	github.com/decred/dcrd/dcrutil/v4 v4.0.3
 	github.com/decred/dcrd/peer/v3 v3.2.0
-	github.com/decred/dcrd/wire v1.7.5
+	github.com/decred/dcrd/wire v1.8.0
 	github.com/decred/go-socks v1.1.0
 	github.com/gin-gonic/gin v1.12.0
 )
@@ -48,7 +48,7 @@ require (
 	github.com/quic-go/quic-go v0.63.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.3.2 // indirect
-	go.mongodb.org/mongo-driver/v2 v2.9.1 // indirect
+	go.mongodb.org/mongo-driver/v2 v2.9.2 // indirect
 	golang.org/x/arch v0.31.0 // indirect
 	golang.org/x/crypto v0.57.0 // indirect
 	golang.org/x/net v0.59.0 // indirect
